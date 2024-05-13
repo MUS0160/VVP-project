@@ -1,6 +1,6 @@
 
 
-def getInputData(domainFile: str, dispersionFile: str) -> tuple[list[float], list[float]]:
+def getInputData(domainFile: str, dispersionFile: str ) -> tuple[list[float], list[float] ]:
     #get domainParams
     #Get domain characteristis from input file.
     #Input file name: domain.txt
@@ -67,6 +67,7 @@ def getInputData(domainFile: str, dispersionFile: str) -> tuple[list[float], lis
     return domainParams, dispersionParams
 
 
+
 def getSourceData(sourceFile: str) -> list[float]:
     #Get source parameters
     #Input file name: sourceMain.txt, sourceDistributed_XX.txt
@@ -106,3 +107,12 @@ def getSourceData(sourceFile: str) -> list[float]:
     f.close()
 
     return sourceParams
+
+def getPowerRatios(powerRatiosFile: str) -> list[float]:
+    f = open(powerRatiosFile, "r")
+    powerRatiosNominal = []
+    for line in f:
+        powerRatiosNominal.append(float(line))
+
+    f.close()
+    return powerRatiosNominal
