@@ -12,11 +12,9 @@ from lib import domain
 #Compute concentration of pollutant at x,y coordinates in source-centered coordinate system
 #x - distance downwind from source in km, y = lateral distance from downwind direction through the source, in km
 #Return one concentration value for specified point [xCoor, yCoor]
-#Compute concentrations corresponding to the real power-output of relevant source,
-# defined as ratio (number from <0,1> interval) of nominal power output
-#sourceParams at the input is already changed proportianally to this real power output
-def gaussDispEq(powerOutputRatio:float,
-                xCoor: float, yCoor: float, zCoor: float, 
+#Compute concentrations corresponding to the nominal power-output of relevant source,
+
+def gaussDispEq(xCoor: float, yCoor: float, zCoor: float, 
                 sourceParams: list[float],
                 dispersionParams: list[float], 
                 stabilityClass: str) -> float:
@@ -42,10 +40,10 @@ def gaussDispEq(powerOutputRatio:float,
     if(xCoor > 0):
         horizontalDispTerm = np.power(np.e, (-(yCoor**2)/(2*(np.power(sigma_y,2)))))
         verticalDispTerm = ( np.e**(-((zCoor-effPlumeHeight)**2)/(2*(sigma_z**2))) ) + (np.e**(-((zCoor+effPlumeHeight)**2)/(2*(sigma_z**2))))
-        C = ((powerOutputRatio*sourceParams[6])/(dispersionParams[1] * sigma_y * sigma_z * 2 * np.pi)) * horizontalDispTerm  * verticalDispTerm
+        C = ((sourceParams[6])/(dispersionParams[1] * sigma_y * sigma_z * 2 * np.pi)) * horizontalDispTerm  * verticalDispTerm
     else:
         C = 0
-    return C #*1000000 #converting from g.m-3 to micrograms.m-3 (imission limit is formulated in micrograms.m-3)
+    return C*1000000 #converting from g.m-3 to micrograms.m-3 (imission limit is formulated in micrograms.m-3)
     #===================================/COMPUTE=CONCENTRATION========================================================#
 
 #============================================================================================================================================#
@@ -134,8 +132,7 @@ def totalConcFields_MainSmall(sourceParams_all: list[list[float]], dispersionPar
 #Compute concentrations corresponding to the real power-output of relevant source,
 # defined as ratio (number from <0,1> interval) of nominal power output
 #sourceParams at the input is already changed proportianally to this real power output
-def conc_OneSource(powerOutputRatio: float, 
-                   xCoor: float, yCoor: float, zCoor: float, 
+def conc_OneSource(xCoor: float, yCoor: float, zCoor: float, 
                    sourceParams: list[float], 
                    dispersionParams: list[float], 
                    domainParams: list[float], 
@@ -147,7 +144,7 @@ def conc_OneSource(powerOutputRatio: float,
     windDirections = ["N", "NW", "W", "SW", "S", "SE", "E", "NE"]
     for indx in range(len(windDirections)):
         point_xCoorSource, point_ySource = domain.domainToSourceCoor(xCoor, yCoor, sourceParams, domainParams, windDirections[indx])
-        pointConcentration += dispersionParams[indx+2] * gaussDispEq(powerOutputRatio, point_xCoorSource, point_ySource, zCoor, sourceParams, dispersionParams, stabilityClass)
+        pointConcentration += dispersionParams[indx+2] * gaussDispEq(point_xCoorSource, point_ySource, zCoor, sourceParams, dispersionParams, stabilityClass)
         
     return pointConcentration
 
@@ -162,8 +159,7 @@ def conc_OneSource(powerOutputRatio: float,
 #===========================================================================================================================================#
 #Compute yearly concetration in point x for all sources and all wind directions, for one stability class, based on real power outout
 #of all sources defined as ratio (number from <0,1> interval) of nominal power output
-def concAllSourcesOnePoint(powerOutputRatios: list[float],
-                  xCoor: float, yCoor: float, zCoor: float,
+def concAllSourcesOnePoint(xCoor: float, yCoor: float, zCoor: float,
                   sourceParams_all: list[list[float]], 
                   dispersionParams: list[float], 
                   domainParams: list[float], 
@@ -178,13 +174,8 @@ def concAllSourcesOnePoint(powerOutputRatios: list[float],
     
     ##add imission contribution of each source
     for indx in range(len(sourceParams_all)):
-        #sourceParams_Copy = (sourceParams_all[indx]).copy()
         sourceParams = sourceParams_all[indx]
-        #Change pollutant mass flow at the stack outlet proportianaly to real power output ratio of each source
-        #sourceParams[6] = powerOutputRatios[indx]*sourceParams[6]
-        powerOutputRatio = powerOutputRatios[indx].copy()
-        if(powerOutputRatio != 0):
-            pointConcentration_AllSources += conc_OneSource(powerOutputRatio, xCoor, yCoor, zCoor, sourceParams, dispersionParams, domainParams, stabilityClass)
+        pointConcentration_AllSources += conc_OneSource(xCoor, yCoor, zCoor, sourceParams, dispersionParams, domainParams, stabilityClass)
            
     return pointConcentration_AllSources
 #===========================================================================================================================================#
