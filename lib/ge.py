@@ -6,6 +6,54 @@ from numpy.typing import NDArray
 
 
 from lib import domain
+
+#===========================================================================================================================================#
+#=================================================DISPERSION=COEFFICIENTS===================================================================#
+#===========================================================================================================================================#
+def computeDispersionCoeff(xCoor, stabilityClass: str) -> tuple[float, float]:
+    #after consideration, I think that having these coefficient in "plain sigth" directly in a code is better for readibility and understanding 
+    # of code. However, I moved them into stand-alone function
+    sigma_z_AclassCoef = [240, 1.0, 0.5]
+    sigma_z_BclassCoef = [240, 1.0, 0.5]
+    sigma_z_CclassCoef = [200, 0.0, 0.0]
+    sigma_z_DclassCoef = [140, 0.3, -0.5]
+    sigma_z_EclassCoef = [80, 1.5, -0.5]
+    sigma_z_FclassCoef = [80, 1.5, -0.5]
+
+    sigma_y_AclassCoef = [320, 0.4, -0.5]
+    sigma_y_BclassCoef = [320, 0.4, -0.5]
+    sigma_y_CclassCoef = [220, 0.4, -0.5]
+    sigma_y_DclassCoef = [160, 0.4, -0.5]
+    sigma_y_EclassCoef = [110, 0.4, -0.5]
+    sigma_y_FclassCoef = [110, 0.4, -0.5]
+
+    match stabilityClass:
+        case "A":
+            sigma_z = (sigma_z_AclassCoef[0]*(xCoor/1000))*(1+sigma_z_AclassCoef[1]*(xCoor/1000))**sigma_z_AclassCoef[2]
+            sigma_y = (sigma_y_AclassCoef[0]*(xCoor/1000))*(1+sigma_y_AclassCoef[1]*(xCoor/1000))**sigma_y_AclassCoef[2]
+        case "B":
+            sigma_z = (sigma_z_BclassCoef[0]*(xCoor/1000))*(1+sigma_z_BclassCoef[1]*(xCoor/1000))**sigma_z_BclassCoef[2]
+            sigma_y = (sigma_y_BclassCoef[0]*(xCoor/1000))*(1+sigma_y_BclassCoef[1]*(xCoor/1000))**sigma_y_BclassCoef[2]
+        case "C":
+            sigma_z = (sigma_z_CclassCoef[0]*(xCoor/1000))*(1+sigma_z_CclassCoef[1]*(xCoor/1000))**sigma_z_CclassCoef[2]
+            sigma_y = (sigma_y_CclassCoef[0]*(xCoor/1000))*(1+sigma_y_CclassCoef[1]*(xCoor/1000))**sigma_y_CclassCoef[2]
+        case "D":
+            sigma_z = (sigma_z_DclassCoef[0]*(xCoor/1000))*(1+sigma_z_DclassCoef[1]*(xCoor/1000))**sigma_z_DclassCoef[2]
+            sigma_y = (sigma_y_DclassCoef[0]*(xCoor/1000))*(1+sigma_y_DclassCoef[1]*(xCoor/1000))**sigma_y_DclassCoef[2]
+        case "E":
+            sigma_z = (sigma_z_EclassCoef[0]*(xCoor/1000))*(1+sigma_z_EclassCoef[1]*(xCoor/1000))**sigma_z_EclassCoef[2]
+            sigma_y = (sigma_y_EclassCoef[0]*(xCoor/1000))*(1+sigma_y_EclassCoef[1]*(xCoor/1000))**sigma_y_EclassCoef[2]
+        case "F":
+            sigma_z = (sigma_z_FclassCoef[0]*(xCoor/1000))*(1+sigma_z_FclassCoef[1]*(xCoor/1000))**sigma_z_FclassCoef[2]
+            sigma_y = (sigma_y_FclassCoef[0]*(xCoor/1000))*(1+sigma_y_FclassCoef[1]*(xCoor/1000))**sigma_y_FclassCoef[2]
+    
+    return sigma_z, sigma_y
+#===========================================================================================================================================#
+#=================================================/DISPERSION=COEFFICIENTS==================================================================#
+#===========================================================================================================================================#
+
+
+
 #===========================================================================================================================================#
 #===========================================CONCENTRATION=IN=ONE=POINT======================================================================#
 #===========================================================================================================================================#
@@ -50,6 +98,8 @@ def gaussDispEq(xCoor: float, yCoor: float, zCoor: float,
 #===========================================/CONCENTRATION=IN=ONE=POINT======================================================================#
 #============================================================================================================================================#
 
+
+
 #===========================================================================================================================================#
 #==============================================CONCENTRATIONS=ONE=SOURCE=ONE=WIND=DIRECTION=================================================#
 #===========================================================================================================================================#
@@ -76,6 +126,7 @@ def gaussDispEqDomain(sourceParams: list[float],
 #===========================================================================================================================================#
 #==============================================/CONCENTRATIONS=ONE=SOURCE=ONE=WIND=DIRECTION================================================#
 #===========================================================================================================================================#
+
 
 
 #===========================================================================================================================================#
@@ -151,226 +202,6 @@ def conc_OneSource(xCoor: float, yCoor: float, zCoor: float,
 #===========================================================================================================================================#
 #=======================================/CONCENTRATION=IN=ONE=POINT=FROM=ONE=SOURCE=========================================================#
 #===========================================================================================================================================#
-
-
-
-#===========================================================================================================================================#
-#=======================================CONCENTRATION=IN=ONE=POINT=FROM=ALL=SOURCES=========================================================#
-#===========================================================================================================================================#
-#Compute yearly concetration in point x for all sources and all wind directions, for one stability class, based on real power outout
-#of all sources defined as ratio (number from <0,1> interval) of nominal power output
-def concAllSourcesOnePoint(xCoor: float, yCoor: float, zCoor: float,
-                  sourceParams_all: list[list[float]], 
-                  dispersionParams: list[float], 
-                  domainParams: list[float], 
-                  stabilityClass: str) -> float:
-
-    '''
-    sourceParams_all_copy = []
-    for source in sourceParams_all:
-        sourceParams_all_copy.append(source.copy())
-    '''
-    pointConcentration_AllSources = 0 #total concentration at point x,y,z due to the imission contribution of all sources running at real power outputs
-    
-    ##add imission contribution of each source
-    for indx in range(len(sourceParams_all)):
-        sourceParams = sourceParams_all[indx]
-        pointConcentration_AllSources += conc_OneSource(xCoor, yCoor, zCoor, sourceParams, dispersionParams, domainParams, stabilityClass)
-           
-    return pointConcentration_AllSources
-#===========================================================================================================================================#
-#=======================================/CONCENTRATION=IN=ONE=POINT=FROM=ALL=SOURCES========================================================#
-#===========================================================================================================================================#
-
-
-#===========================================================================================================================================#
-#=======================================CONCENTRATION=IN=ALL=POINTS=FROM=ALL=SOURCES========================================================#
-#===========================================================================================================================================#
-#compute sum of yerly concentrations in all points in <points> for all sources and all wind directions, for one stability class,
-# based on real power outout of all sources defined as ratio (number from <0,1> interval) of nominal power output
-def concAllSourcesAllPoint(powerOutputRatios: list[float],
-                  points: list[list[float]],
-                  sourceParams_all: list[list[float]], 
-                  dispersionParams: list[float], 
-                  domainParams: list[float], 
-                  stabilityClass: str) -> float:
-    '''
-    sourceParams_all_copy = []
-    for source in sourceParams_all:
-        sourceParams_all_copy.append(source.copy())
-    '''
-
-    allPointsConcentration_AllSources = 0
-    for point in points:
-        xCoor, yCoor, zCoor = point
-        allPointsConcentration_AllSources += concAllSourcesOnePoint(powerOutputRatios, 
-                                                                    xCoor, yCoor, zCoor, 
-                                                                    sourceParams_all, 
-                                                                    dispersionParams, 
-                                                                    domainParams, 
-                                                                    stabilityClass)
-    
-    return allPointsConcentration_AllSources
-
-#===========================================================================================================================================#
-#=======================================/CONCENTRATION=IN=ALL=POINTs=FROM=ALL=SOURCES=======================================================#
-#===========================================================================================================================================#
-
-
-
-#===========================================================================================================================================#
-#=======================================================MINIMIZE=FOR=ONE=POINT==============================================================#
-#===========================================================================================================================================#
-#find real power output combination [q1, q2, q3 .... qn] which minimize concentration at point x,y,z
-def minimizeConcAtOnePoint(xCoor: float, yCoor: float, zCoor: float,
-                        sourceParams_all: list[list[float]],
-                        powerRatiosNominal: list[float], 
-                        dispersionParams: list[float], 
-                        domainParams: list[float], 
-                        stabilityClass: str) -> float:
-    '''
-    print("\n")
-    for source in sourceParams_all:
-        print("Source params:", source[0], source[1], source[2], source[3], source[4], source[5], source[6])
-    '''
-
-    #define initial guess for qRatios
-    #lst = [0.4, 0.6, 0.6, 0.6, 0.6, 0.6]
-    lst = [1, 0, 0, 0, 0, 0]
-    xinit = np.array(lst)
-
-    #constraint that ensures constant total power output
-    sumaryPowerOutput = lambda x: np.dot(x, powerRatiosNominal)
-    qRatiosConstraint = spopt.NonlinearConstraint(sumaryPowerOutput, 1, 1)
-
-    #minimize output from concAllSourcesOnePoint() for point X[xCoor, yCoor, zCoor] with respect to first parameter - powerOutputRatios
-    #(i.e. find combination of real power-outpus of all sources, for which total concentration in point X is minimal)
-    #few important facts: in case of no method defined, solution does not move from xinit,
-    #                       only method for which (probably aproximate) solution is found is trust-constr, all other methods does not work at all
-    #                       however even this method returns slightly different solution for diferent initial seeds xinit
-    res = spopt.minimize(concAllSourcesOnePoint, x0 = xinit, 
-                         args = (xCoor, yCoor, zCoor, sourceParams_all, dispersionParams, domainParams, stabilityClass),  
-                         bounds = [(0,1), (0,1), (0,1), (0,1), (0,1), (0,1) ], 
-                         constraints=qRatiosConstraint,
-                         method = "trust-constr")
-    
-    return res.x
-#===========================================================================================================================================#
-#=======================================================/MINIMIZE=FOR=ONE=POINT=============================================================#
-#===========================================================================================================================================#
-
-
-#===========================================================================================================================================#
-#=======================================================MINIMIZE=FOR=ALL=POINT==============================================================#
-#===========================================================================================================================================#
-#find real power output combination [q1, q2, q3 .... qn] which minimize concentration at point x,y,z
-def minimizeConcAtAllPoints(points: list[list[float]],
-                        sourceParams_all: list[list[float]],
-                        powerRatiosNominal: list[float], 
-                        dispersionParams: list[float], 
-                        domainParams: list[float], 
-                        stabilityClass: str) -> float:
-    '''
-    print("\n")
-    for source in sourceParams_all:
-        print("Source params:", source[0], source[1], source[2], source[3], source[4], source[5], source[6])
-    '''
-
-    '''
-    sourceParams_all_copy = []
-    for source in sourceParams_all:
-        sourceParams_all_copy.append(source.copy())
-    '''
-        
-    #define initial guess for qRatios
-    #lst = [0.4, 0.6, 0.6, 0.6, 0.6, 0.6]
-    #lst = [1, 0, 0, 0, 0, 0]
-    lst = [0, 1, 1, 1, 1, 1]
-    xinit = np.array(lst)
-
-    #constraint that ensures constant total power output
-    sumaryPowerOutput = lambda x: np.dot(x, powerRatiosNominal)
-    qRatiosConstraint = spopt.NonlinearConstraint(sumaryPowerOutput, 1, 1)
-
-    #minimizingFunction = lambda x: concAllSourcesAllPoint(x, points, sourceParams_all, dispersionParams, domainParams, stabilityClass)
-
-    #minimize output from concAllSourcesAllPoint() for all points define in <points with respect to first parameter - powerOutputRatios
-    #(i.e. find combination of real power-outpus of all sources, for which sum of total concentration in all points is minimal)
-    #few important facts: in case of no method defined, solution does not move from xinit,
-    #                       only method for which (probably aproximate) solution is found is trust-constr, all other methods does not work at all
-    #                       however even this method returns slightly different solution for diferent initial seeds xinit
-
-    '''
-    res = spopt.minimize(minimizingFunction, x0 = xinit, 
-                         bounds = [(0,1), (0,1), (0,1), (0,1), (0,1), (0,1) ], 
-                         constraints=qRatiosConstraint,
-                         method = "trust-constr")
-    '''
-
-    res = spopt.minimize(concAllSourcesAllPoint, x0 = xinit, 
-                         args = (points, sourceParams_all, dispersionParams, domainParams, stabilityClass),  
-                         bounds = [(0,1), (0,1), (0,1), (0,1), (0,1), (0,1) ], 
-                         constraints=qRatiosConstraint,
-                         method = "trust-constr")
-    
-
-    '''
-    print("\n")
-    for source in sourceParams_all:
-        print("Source params:", source[0], source[1], source[2], source[3], source[4], source[5], source[6])
-    '''
-    return res.x
-#===========================================================================================================================================#
-#=======================================================/MINIMIZE=FOR=ALL=POINT=============================================================#
-#===========================================================================================================================================#
-
-
-
-#===========================================================================================================================================#
-#=================================================DISPERSION=COEFFICIENTS===================================================================#
-#===========================================================================================================================================#
-def computeDispersionCoeff(xCoor, stabilityClass: str) -> tuple[float, float]:
-    #after consideration, I think that having these coefficient in "plain sigth" directly in a code is better for readibility and understanding 
-    # of code. However, I moved them into stand-alone function
-    sigma_z_AclassCoef = [240, 1.0, 0.5]
-    sigma_z_BclassCoef = [240, 1.0, 0.5]
-    sigma_z_CclassCoef = [200, 0.0, 0.0]
-    sigma_z_DclassCoef = [140, 0.3, -0.5]
-    sigma_z_EclassCoef = [80, 1.5, -0.5]
-    sigma_z_FclassCoef = [80, 1.5, -0.5]
-
-    sigma_y_AclassCoef = [320, 0.4, -0.5]
-    sigma_y_BclassCoef = [320, 0.4, -0.5]
-    sigma_y_CclassCoef = [220, 0.4, -0.5]
-    sigma_y_DclassCoef = [160, 0.4, -0.5]
-    sigma_y_EclassCoef = [110, 0.4, -0.5]
-    sigma_y_FclassCoef = [110, 0.4, -0.5]
-
-    match stabilityClass:
-        case "A":
-            sigma_z = (sigma_z_AclassCoef[0]*(xCoor/1000))*(1+sigma_z_AclassCoef[1]*(xCoor/1000))**sigma_z_AclassCoef[2]
-            sigma_y = (sigma_y_AclassCoef[0]*(xCoor/1000))*(1+sigma_y_AclassCoef[1]*(xCoor/1000))**sigma_y_AclassCoef[2]
-        case "B":
-            sigma_z = (sigma_z_BclassCoef[0]*(xCoor/1000))*(1+sigma_z_BclassCoef[1]*(xCoor/1000))**sigma_z_BclassCoef[2]
-            sigma_y = (sigma_y_BclassCoef[0]*(xCoor/1000))*(1+sigma_y_BclassCoef[1]*(xCoor/1000))**sigma_y_BclassCoef[2]
-        case "C":
-            sigma_z = (sigma_z_CclassCoef[0]*(xCoor/1000))*(1+sigma_z_CclassCoef[1]*(xCoor/1000))**sigma_z_CclassCoef[2]
-            sigma_y = (sigma_y_CclassCoef[0]*(xCoor/1000))*(1+sigma_y_CclassCoef[1]*(xCoor/1000))**sigma_y_CclassCoef[2]
-        case "D":
-            sigma_z = (sigma_z_DclassCoef[0]*(xCoor/1000))*(1+sigma_z_DclassCoef[1]*(xCoor/1000))**sigma_z_DclassCoef[2]
-            sigma_y = (sigma_y_DclassCoef[0]*(xCoor/1000))*(1+sigma_y_DclassCoef[1]*(xCoor/1000))**sigma_y_DclassCoef[2]
-        case "E":
-            sigma_z = (sigma_z_EclassCoef[0]*(xCoor/1000))*(1+sigma_z_EclassCoef[1]*(xCoor/1000))**sigma_z_EclassCoef[2]
-            sigma_y = (sigma_y_EclassCoef[0]*(xCoor/1000))*(1+sigma_y_EclassCoef[1]*(xCoor/1000))**sigma_y_EclassCoef[2]
-        case "F":
-            sigma_z = (sigma_z_FclassCoef[0]*(xCoor/1000))*(1+sigma_z_FclassCoef[1]*(xCoor/1000))**sigma_z_FclassCoef[2]
-            sigma_y = (sigma_y_FclassCoef[0]*(xCoor/1000))*(1+sigma_y_FclassCoef[1]*(xCoor/1000))**sigma_y_FclassCoef[2]
-    
-    return sigma_z, sigma_y
-#===========================================================================================================================================#
-#=================================================/DISPERSION=COEFFICIENTS==================================================================#
-#===========================================================================================================================================#
-
 
 
 
